@@ -1,0 +1,24 @@
+<!--XML Representation (1:M)-->
+
+<Departments>
+    <Department id="D01" name="IT">
+        <Employee id="E01" name="Alice"/>
+        <Employee id="E02" name="Bob"/>
+    </Department>
+    <Department id="D02" name="HR">
+        <Employee id="E03" name="John"/>
+    </Department>
+</Departments>
+
+<!--XML Representation (M:M)-->
+
+<Students>
+    <Student id="S1" name="Alice">
+        <CourseRef id="C1"/>
+        <CourseRef id="C2"/>
+    </Student>
+    <Student id="S2" name="Bob">
+        <CourseRef id="C2"/>
+    </Student>
+</Students>
+ 
