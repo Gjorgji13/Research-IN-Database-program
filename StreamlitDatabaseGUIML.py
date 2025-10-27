@@ -81,7 +81,6 @@ st.sidebar.header("Scalability Options")
 use_sampling = st.sidebar.checkbox("Use Random Sample for Training?", value=False)
 sample_size_perc = st.sidebar.slider("Sample Size (%)", 0.5, 10.0, 5.0) / 100.0
 
-# Try to detect primary key (for potential future use, logic remains)
 pk_col = None
 try:
     pk_info = inspector.get_pk_constraint(selected_table)
@@ -95,7 +94,7 @@ except Exception:
 # Auto-detect query log table / ML setup
 # -------------------------
 auto_query_features = False
-# Use df_schema_preview for column checks
+
 if "query_text" in df_schema_preview.columns and "execution_time" in df_schema_preview.columns:
     auto_query_features = True
     feature_cols = ["query_length", "num_spaces", "num_tables"]
@@ -103,7 +102,6 @@ if "query_text" in df_schema_preview.columns and "execution_time" in df_schema_p
     problem_type = "regression"
     st.write("Detected query log table. Auto-generated features will be computed on sampled data.")
 else:
-    # Fallback to generic ML
     numeric_cols = df_schema_preview.select_dtypes(include=np.number).columns.tolist()
     object_cols = df_schema_preview.select_dtypes(include=["object", "datetime", "category"]).columns.tolist()
     all_cols = df_schema_preview.columns.tolist()
@@ -279,7 +277,7 @@ if train_btn:
 
 
     # -------------------------
-    # 🔥 Feature Importance (Required Graph 1)
+    # Feature Importance (Required Graph 1)
     # -------------------------
 
     # --- Get the correct, expanded feature names ---
@@ -391,6 +389,3 @@ if train_btn:
         st.success(f"✅ Full predictions successfully written to new table: `{output_table_name}`")
 
     st.success("Analysis complete.")
-
-# Removed redundant code blocks (df_out generation, old write-back, and excel download)
-# as the primary goal is the scalable DB write-back.
