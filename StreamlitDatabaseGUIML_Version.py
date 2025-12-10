@@ -1,21 +1,118 @@
-import random
 import sqlite3
-import time
-import tracemalloc
 from contextlib import contextmanager
 from typing import List, Tuple
 
-import pandas as pd
 import streamlit as st
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect  # <-- ДОДАЈТЕ text овде!
 
 from indatabase_ai_ml import selected_table
+
+# ... (продолжува остатокот од вашиот код) ...
 
 # -------------------------
 # Page config & UI Setup
 # -------------------------
 st.set_page_config(page_title="Database Research Lab", layout="wide")
 
+
+
+
+import streamlit as st
+import time
+import tracemalloc
+import random
+import pandas as pd
+
+
+# ... (Други постоечки imports) ...
+
+def render_tab_guide(tab_name: str, context: str, newbie_tip: str, pro_tip: str):
+    """Рендерира колабирачки водич за корисникот врз основа на нивото на искуство."""
+    st.markdown("---")
+    st.markdown(f"## 📖 Упатство за {tab_name}")
+    with st.expander("Кликни за детален Водич (Newbie/Pro)", expanded=False):
+        st.markdown(f"**📚 Цел на овој дел:** {context}")
+        st.markdown("---")
+        st.markdown("### 👨‍💻 За Почетници (Newbie)")
+        st.info(f"**💡 Што да правите:** {newbie_tip}")
+        st.markdown("### 🔬 За Искусни (Pro / Research)")
+        st.markdown(f"**🔬 Клучна хипотеза:** {pro_tip}")
+
+
+def render_research_intro():
+    """Рендерира научен вовед и дефиниција на истражувачкиот проблем (Research Scope)."""
+    st.header("📘 1. Research Overview: Дефиниција на Истражувачкиот Проблем")
+    st.markdown("---")
+
+    st.subheader("Тема: Самоуправувачки Бази на Податоци (Self-Driving Databases)")
+    st.markdown("""
+    Овој систем е контролирана експериментална платформа за тестирање на **Автономни, Самоуправувачки Бази на Податоци**.
+    Транзицијата од статични кон само-учечки системи е клучниот тренд во истражувањето.
+    """)
+
+    st.markdown("---")
+
+    st.subheader("🔍 Примарно Истражувачко Прашање (PhD Research Problem)")
+    st.info("""
+    **Како може однесувањето на работниот товар (Query Workload) да се искористи за автономно оптимизирање на физичкиот дизајн на базата преку AI-водени стратегии за индексирање?**
+    """)
+
+    st.markdown("---")
+
+    col_q1, col_q2 = st.columns(2)
+    with col_q1:
+        st.subheader("🔬 Секундарни Истражувачки Прашања")
+        st.markdown("""
+        1.  Колку е предвидлива корисноста на индексот од историскиот `Workload`?
+        2.  Која е точката на премин (crossover point) помеѓу Table Scan и Index Scan?
+        3.  Како дизајнот на индексот влијае на кривите на скалабилност?
+        """)
+
+    with col_q2:
+        st.subheader("🎯 Таргетирани Нови Трендови (ФИКТ, Трет Циклус)")
+        st.markdown("""
+        - **Self-Driving Databases**: Целосна автономија.
+        - **AI-Assisted Optimization**: Користење ML за tuning.
+        - **Automated Physical Design**: Автоматско креирање и тестирање на индекси.
+        - **Hybrid SQL–NoSQL Systems**: Споредба на структури (LSM-Tree).
+        - **Cost-Based Optimizer Modeling**: Анализа на планот за извршување.
+        """)
+
+    st.markdown("---")
+    st.markdown("### 🗺️ Упатство за Користење на Модулите (Истражувачки Тек)")
+    st.markdown("""
+    Користете ги модулите во секвенца (од 2 до 5) за да спроведете целосен научен експеримент:
+    1.  **⚙️ Setup**: Поставете ја контролираната база и обемот на податоци.
+    2.  **🧪 Workload**: Генерирајте го Workload-от (историја на барања) што системот ќе го 'научи'.
+    3.  **🤖 Autonomous Lab**: Дозволете му на АИ да препорача индекси, спроведете експерименти и тестирајте хибридни концепти.
+    4.  **📊 Results**: Донесете формални заклучоци врз основа на добиените криви на перформанси.
+    """)
+
+
+def simulate_lsm_btree_io(num_ops: int, storage_type: str) -> dict:
+    """Симулира I/O трошок врз основа на LSM-Tree наспроти B-Tree структура."""
+    if storage_type == "B-Tree (SQL)":
+        # B-Tree: High write cost (in-place update) but low read cost
+        write_cost = num_ops * 1.5
+        read_cost = num_ops * 0.5
+
+    elif storage_type == "LSM-Tree (NoSQL)":
+        # LSM-Tree: Low write cost (sequential log appends) but high read cost (multiple component merges)
+        write_cost = num_ops * 0.3
+        read_cost = num_ops * 1.2
+
+        total_cost = write_cost + read_cost
+
+    return {
+        "Storage": storage_type,
+        "Total Operations": num_ops,
+        "Write Cost (Simulated I/O)": write_cost,
+        "Read Cost (Simulated I/O)": read_cost,
+        "Total Cost (Normalized)": total_cost,
+    }
+
+
+# ... (Овде продолжуваат другите хелпер функции) ...
 
 # -------------------------
 # Custom CSS for Professional Look
@@ -76,6 +173,16 @@ apply_custom_css()
 
 st.title("🧠 AI-Driven Self-Optimizing Database Research Lab")
 st.caption("Experimental Platform for New Trends in Database Systems Research")
+st.info("""
+🔬 **Scientific Explanation:**
+This module measures how indexing impacts execution time and memory.
+Each experiment executes the same query with and without an index and logs:
+- Execution time
+- Memory usage
+- Result size
+These metrics are later used for AI learning and trend analysis.
+""")
+
 st.markdown("---")
 
 # -------------------------
@@ -1045,7 +1152,16 @@ from sqlalchemy import text  # Ensure this is imported globally
 # clean_index_column, get_table_metadata, create_index, drop_index.
 
 def render_research_lab():
-    """Renders the Research Lab (Performance, Indexing, Benchmarking) tab with improved UI."""
+    """Рендерира Research Lab (Performance, Indexing, Benchmarking) со нови експерименти."""
+    selected_table_name = st.session_state.get("selected_table", "(no tables found)")
+
+    # --- 1. Внесување на Водичот ---
+    render_tab_guide(
+        "Experimental Setup (Поставување)",
+        "Овој модул ја поставува контролираната средина за истражување. Ја дефинирате големината на податочниот сет (Независна Варијабла).",
+        "Повлечете го лизгачот за да одберете големина, потоа кликнете 'Generate Dataset'. Ова е првиот и задолжителен чекор пред да почнете со тестирање.",
+        "Овде ја контролирате **Скалабилноста** (Dataset Size) за да го испитате ефектот врз перформансите на оптимизаторот. Користете го 'Reset All Indexes' пред секој нов експеримент за чиста база."
+    )
 
     # Define table name early to avoid shadowing errors
     selected_table_name = st.session_state.get("selected_table", "(no tables found)")
@@ -1701,9 +1817,7 @@ def render_nosql_lab():
     num_ops = st.slider("Number of Random Operations (Simulated)", 100, 2000, 500, step=100, key="io_scale")
 
     if st.button("▶️ Run Storage Engine I/O Simulation", key="run_io_sim"):
-        # Conceptual I/O Cost Factors (Simulated)
-        # B-Tree: High cost for random write (page overwrite), low cost for random read (logarithmic lookup)
-        # LSM-Tree: Low cost for random write (sequential append), high cost for random read (checking multiple segments)
+
         BTREE_READ_COST = 5
         BTREE_WRITE_COST = 25
         LSM_READ_COST = 15
@@ -1861,50 +1975,171 @@ def render_nosql_lab():
 # --------------------------------------------------
 # Main Application Flow (Tabbed Interface)
 # --------------------------------------------------
+# -------------------------
+# Tab Definitions - НАУЧЕН РЕДОСЛЕД (ФИНАЛЕН)
+# -------------------------
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "⚙️ Connection & Setup",
-    "🚀 Dynamic SQL Builder",
-    "🔬 Research Lab",
-    "🌐 NoSQL & Distributed Systems",
-    "🧠 AI Analyzer & Logs"
+    "📘 1. Research Overview",
+    "⚙️ 2. Experimental Setup",
+    "🧪 3. Workload Generator",
+    "🤖 4. Optimization Experiments",    # ПРОМЕНЕТО: Пофокусирано
+    "📊 5. Results & Scientific Export"
 ])
 
-def render_research_summary():
-    st.header("📘 Scientific Contribution & Research Scope")
 
-    st.markdown("""
-    ### Research Focus:
-    This system investigates:
-    - AI-guided query optimization
-    - Automated physical database design
-    - Cost-based optimizer behavior
-    - Index-vs-scan decision boundaries
-    - Distributed database performance models
+def generate_final_research_summary():
+    """Генерира детален, двослоен AI истражувачки резиме врз основа на сите логови."""
 
-    ### New Trends Addressed:
-    - Self-driving databases
-    - AI-assisted tuning
-    - Hybrid SQL–NoSQL systems
-    - Adaptive cost models
-    - Automated performance optimization
-    """)
+    # ⚠️ Претпоставува дека `read_perf_logs` е достапен
+    try:
+        # Променете го овој дел ако вашата функција има различно име
+        df_logs = read_perf_logs(limit=5000)
+    except Exception:
+        return "Не може да се прочитаат логовите. Проверете ја функцијата read_perf_logs."
 
+    if df_logs.empty:
+        return "Нема доволно податоци (Workload) за да се генерира резиме. Извршете повеќе барања во Лабораториите."
 
+    # --- 1. Анализа на Податоци ---
+    total_queries = len(df_logs)
 
+    # Индексирање Подобрување (Indexing Improvement)
+    df_no_index = df_logs[df_logs["indexed"] == 0]["exec_time"]
+    df_with_index = df_logs[df_logs["indexed"] == 1]["exec_time"]
+    improvement = 1.0
+    if not df_no_index.empty and not df_with_index.empty:
+        avg_no_index = df_no_index.mean()
+        avg_with_index = df_with_index.mean()
+        if avg_with_index > 0:
+            improvement = avg_no_index / avg_with_index
+        else:
+            improvement = 100.0  # Huge improvement if indexed time is near zero
+
+    # Топ 3 Најбавни Барања
+    top_slow = df_logs.sort_values("exec_time", ascending=False).head(3)[["query_text", "exec_time"]]
+    top_queries_text = top_slow.to_string(index=False, header=True)
+
+    # Проверка за OLAP (GROUP BY) за Материјализиран Поглед
+    # Ова е новиот дел за AI препорака за OLAP оптимизација
+    complex_queries = df_logs[df_logs["query_text"].str.contains("GROUP BY", na=False)].shape[0]
+
+    # --- Part 1: Plain Explanation of Session Activities (За Почетници) ---
+    summary_part_1 = f"""
+    ## 📝 1. Детално Резиме на Работно Оптоварување (Plain Explanation)
+
+    **📊 Статистика на Сесијата:**
+    * **Вкупно Извршени Операции:** {total_queries}
+    * **Објаснување (Workload):** Вие ја симулиравте работата на вистинска апликација. Овие {total_queries} барања го претставуваат **Workload-от** (секојдневната работа) на базата.
+    * **Цел:** АИ-системот ги следеше овие операции за да научи кои делови од базата треба да ги оптимизира за да стане **Self-Optimizing**.
+    """
+
+    # --- Part 2: Scientific Findings and Trends (За Истражувачи) ---
+    improvement_text = f"**{improvement:.2f}x** подобрување" if improvement > 1.05 else "Нема значајно подобрување или нецелосни податоци (< 5%)"
+
+    # AI Suggestion Logic (Нов Тренд: Материјализиран Поглед)
+    # ... (во generate_final_research_summary функцијата) ...
+
+    # AI Suggestion Logic (Нов Тренд: Материјализиран Поглед)
+    mv_suggestion = ""
+    if complex_queries >= 5 and improvement >= 1.05:
+        # ⚠️ ПОПРАВКА НА СИНТАКСА: Image tag-от е вклучен во стрингот.
+        mv_suggestion = f"💡 **AI-Driven Recommendation (Нов Тренд):** Системот детектираше чести, комплексни **OLAP (аналитички)** операции (`GROUP BY`). Се препорачува тестирање на **Материјализиран Поглед (Materialized View)** за дополнително забрзување на анализите, клучен тренд во Data Warehousing. "
+    else:
+        mv_suggestion = "Пронајдени се само основни шаблони на барања. Продолжете со посложени експерименти (на пр., повеќе `GROUP BY` барања) за напредни AI препораки."
+
+    # ... (продолжува) ...
+
+    summary_part_2 = f"""
+    ## 🔬 2. Истражувачки Заклучоци и Тренд Анализа (Scientific Findings)
+
+    **📊 Квантитативни Наоди (Self-Optimization):**
+    * **Workload-Driven Indexing Успех:** Индексирањето доведе до просечно **{improvement_text}** во брзината на извршување.
+    * **Топ 3 Оптимизациски Таргети (Query Hotspots):** (Најбавните барања)
+        ```markdown
+{top_queries_text}
+        ```
+
+    **🎯 Покриеност на Истражувачки Трендови:**
+    * **Self-Driving Databases:** Демонстриран преку автоматско учење од Workload и препораки за физички дизајн.
+    * **NewSQL/In-Memory:** (Ако е извршен NewSQL експериментот).
+    * **Хибридни (SQL-NoSQL) Системи:** Истражен компромисот B-Trees vs. LSM-Trees.
+    * **Data Lakehouse:** Истражен концептот Schema-on-Read.
+
+    **🤖 AI-Driven Insights (Клучни Тренд Препораки):**
+    * {mv_suggestion}
+
+    Овој прототип успешно ја докажува тезата за **Self-Optimizing Database Systems** – клучен 'Нов Тренд во истражување кај базите на податоци'.
+    """
+
+    return summary_part_1 + "\n---\n" + summary_part_2
+
+def render_research_conclusion(): # Проверете дали вашата функција се вика вака
+    st.header("🧠 Final AI Research Summary")
+    if st.button("Generate Final Research Report"):
+        report = generate_final_research_summary()
+        # Променето од st.success() во st.markdown() за прикажување на форматираниот извештај
+        st.markdown(report)
+
+# ------------------------
+# Main Application Flow - SCIENTIFIC PIPELINE (КОРИГИРАНА ВЕРЗИЈА)
+# ------------------------
+
+# 1. 📘 Research Overview (НОВ ТАБ)
 with tab1:
+    render_research_intro()
+
+    render_tab_guide(
+        "1. Research Overview (Вовед)",
+        "Овој модул ја дефинира **Формалната Академска Рамка** на целиот експеримент: што се истражува, зошто е важно и кој е текот на работата. Ова е вашиот PhD Протокол.",
+        "Прочитајте го воведот за да разберете што прави апликацијата. Потоа, продолжете со чекор 2 (Setup) за да започнете со експериментот.",
+        "Овде се дефинирани **Примарната Истражувачка Цел** и **Секундарните Прашања** (PhD Research Problem), што е клучно за академската одбрана."
+    )
+
+# 2. ⚙️ Experimental Setup (СТАР TAB1)
+with tab2:
     render_connection_and_setup()
 
-with tab2:
+    render_tab_guide(
+        "2. Experimental Setup (Поставување)",
+        "Овој модул ја поставува контролираната средина за истражување. Ја дефинирате големината на податочниот сет (Независна Варијабла).",
+        "Повлечете го лизгачот за да одберете големина, потоа кликнете 'Generate Dataset'. Ова е првиот и задолжителен чекор пред да почнете со тестирање. Кликнете 'Reset All Indexes' за чист експеримент.",
+        "Овде ја контролирате **Скалабилноста** (Dataset Size) за да го испитате ефектот врз перформансите на оптимизаторот. Dataset Size е главната **Независна Варијабла**."
+    )
+
+# 3. 🧪 Workload Generator (СТАР TAB2)
+with tab3:
     render_dynamic_sql_builder()
 
-with tab3:
-    render_research_lab()
+    render_tab_guide(
+        "3. Workload Generator (Генератор на Барања)",
+        "Овој модул го симулира однесувањето на корисникот и генерира **Workload** (историја на барања) што AI-системот ќе го научи за автономна оптимизација.",
+        "Внесете го вашето SQL барање или користете го претходно внесеното. Кликнете 'Run Query' за да го извршите и запишете во историјата (логовите). Обидете се да извршите повеќе различни барања.",
+        "Секое извршување е **Workload Trace** и е клучно за **Workload Mining**. AI-системот го користи овој Workload за да донесе одлука за креирање на **AI-Guided Physical Design**."
+    )
 
+# 4. 🤖 4. Optimization Experiments (Експериментални Лаборатории)
 with tab4:
+    st.header("🤖 Optimization Experiments")
+    render_research_lab()
     render_nosql_lab()
 
+    render_tab_guide(
+        "4. Optimization Experiments", # ПРОМЕНЕТО ОВДЕ
+        "Овој модул ги тестира клучните хипотези за автономно оптимизирање, вклучувајќи автоматско индексирање (AI-Guided) и принципите на NoSQL архитектурите.",
+        "Кликнете 'Run Indexing Experiments' за да видите како индексот го забрзува барањето. Разгледајте ја 'LSM-Tree' симулацијата за да ја разберете разликата помеѓу SQL и NoSQL базите.",
+        "Овде се мерат **Зависните Варијабли (Execution Time/Memory)**. Анализирајте го **EXPLAIN Plan** за да го видите однесувањето на Optimizer-от. 'LSM-Tree' симулацијата го демонстрира трендот **Hybrid SQL-NoSQL** ."
+    )
+
+# 5. 📊 5. Results & Scientific Export (СТАР TAB5)
 with tab5:
     render_ai_analyzer_and_logs()
+
+    render_tab_guide(
+        "5. AI Analyzer & Scientific Export",
+        "Овој модул ги прикажува суровите податоци (логови) и генерира финален, едноставен извештај за тоа што е постигнато во експериментот. Ова е вашиот научен заклучок.",
+        "Кликнете 'Generate Final Research Report' за да добиете заклучок за просечната добивка на перформанси, промената на меморијата и кои барања најмногу се оптимизираа.",
+        "Овде се врши **Квантитативна Евалуација** на хипотезите. Финалниот извештај го сумира **Autonomous Optimization Behavior** на системот врз основа на собраните Workload логови."
+    )
 
 # -------------------------
 # Footer / notes
